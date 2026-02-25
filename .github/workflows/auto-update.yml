@@ -1,50 +1,29 @@
-name: Auto Organize & Update Games
+name: Auto Update Shelf
 
 on:
   push:
     paths:
       - 'roms/**'
+      - 'images/**'
 
 jobs:
-  organize-and-update:
+  update-json:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      - name: Organize ROMs Automatically
-        run: |
-          mkdir -p roms/others
-
-          for file in roms/*; do
-            if [ -f "$file" ]; then
-              filename=$(basename "$file")
-
-              # Extract extension
-              extension="${filename##*.}"
-
-              # If no extension → others
-              if [ "$filename" = "$extension" ]; then
-                folder="others"
-              else
-                folder=$(echo "$extension" | tr '[:upper:]' '[:lower:]')
-              fi
-
-              mkdir -p "roms/$folder"
-              git mv "$file" "roms/$folder/$filename" 2>/dev/null || mv "$file" "roms/$folder/$filename"
-            fi
-          done
+      - uses: actions/checkout@v3
 
       - name: Generate JSON
         run: |
           echo "[" > 86games.json
           first=true
 
-          for file in roms/*/*; do
+          for file in roms/*; do
             if [ -f "$file" ]; then
               filename=$(basename "$file")
-              console=$(basename $(dirname "$file"))
+              name="${filename%.*}"
+              extension="${filename##*.}"
+              image="images/$name.jpg"
 
               if [ "$first" = true ]; then
                 first=false
@@ -52,17 +31,16 @@ jobs:
                 echo "," >> 86games.json
               fi
 
-              echo "  {\"name\": \"$filename\", \"console\": \"$console\", \"file\": \"$file\"}" >> 86games.json
+              echo "  {\"name\": \"$name\", \"console\": \"$extension\", \"file\": \"$file\", \"image\": \"$image\"}" >> 86games.json
             fi
           done
 
           echo "]" >> 86games.json
 
-      - name: Commit Changes
+      - name: Commit JSON
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add roms/
           git add 86games.json
-          git commit -m "Auto organize ROMs and update JSON" || echo "No changes"
+          git commit -m "Auto update games JSON" || echo "No changes"
           git push
