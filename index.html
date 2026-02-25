@@ -1,1 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Game Shelf</title>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
 
+    h1 {
+      margin-top: 20px;
+    }
+
+    .shelf {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .game-card {
+      background: #222;
+      padding: 10px;
+      border-radius: 10px;
+      width: 160px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      transition: transform 0.2s ease;
+    }
+
+    .game-card:hover {
+      transform: scale(1.05);
+    }
+
+    .game-card img {
+      width: 150px;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 5px;
+    }
+
+    .game-card h3 {
+      font-size: 16px;
+      margin: 10px 0 5px 0;
+    }
+
+    .game-card a {
+      display: inline-block;
+      padding: 5px 10px;
+      background: #00ff88;
+      color: black;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+
+    .game-card a:hover {
+      background: #00cc6a;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>🎮 My Game Shelf</h1>
+
+  <div class="shelf" id="shelf"></div>
+
+  <script>
+    fetch("86games.json")
+      .then(response => response.json())
+      .then(data => {
+        const shelf = document.getElementById("shelf");
+
+        data.forEach(game => {
+          const card = document.createElement("div");
+          card.className = "game-card";
+
+          card.innerHTML = `
+            <img src="${game.image}" onerror="this.src='https://via.placeholder.com/150x200?text=No+Image'">
+            <h3>${game.name}</h3>
+            <a href="${game.file}" download>Download</a>
+          `;
+
+          shelf.appendChild(card);
+        });
+      })
+      .catch(error => {
+        console.error("Error loading games:", error);
+      });
+  </script>
+
+</body>
+</html>
