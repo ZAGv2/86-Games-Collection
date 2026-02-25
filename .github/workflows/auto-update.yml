@@ -1,46 +1,58 @@
-name: Auto Update Shelf
+name: Auto Update Games
 
 on:
   push:
     paths:
       - 'roms/**'
-      - 'images/**'
 
 jobs:
   update-json:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-      - name: Generate JSON
+      - name: Install jq
+        run: sudo apt-get install jq
+
+      - name: Process ROMs
+        env:
+          RAWG_API_KEY: ${{ secrets.RAWG_API_KEY }}
         run: |
-          echo "[" > 86games.json
-          first=true
+          mkdir -p images
+          echo "[]" > games.json
 
           for file in roms/*; do
             if [ -f "$file" ]; then
               filename=$(basename "$file")
-              name="${filename%.*}"
-              extension="${filename##*.}"
-              image="images/$name.jpg"
+              gamename="${filename%.*}"
 
-              if [ "$first" = true ]; then
-                first=false
+              echo "Searching cover for $gamename"
+
+              response=$(curl -s "https://api.rawg.io/api/games?key=$RAWG_API_KEY&search=$gamename")
+
+              image=$(echo $response | jq -r '.results[0].background_image')
+
+              if [ "$image" != "null" ]; then
+                curl -L "$image" -o "images/$gamename.jpg"
+                imgpath="images/$gamename.jpg"
               else
-                echo "," >> 86games.json
+                imgpath=""
               fi
 
-              echo "  {\"name\": \"$name\", \"console\": \"$extension\", \"file\": \"$file\", \"image\": \"$image\"}" >> 86games.json
+              jq --arg name "$gamename" \
+                 --arg file "$file" \
+                 --arg image "$imgpath" \
+                 '. += [{"name": $name, "file": $file, "image": $image}]' \
+                 games.json > temp.json && mv temp.json games.json
             fi
           done
 
-          echo "]" >> 86games.json
-
-      - name: Commit JSON
+      - name: Commit changes
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add 86games.json
-          git commit -m "Auto update games JSON" || echo "No changes"
+          git add .
+          git commit -m "Auto update games" || echo "No changes"
           git push
