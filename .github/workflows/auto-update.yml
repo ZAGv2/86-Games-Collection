@@ -1,1 +1,40 @@
+name: Auto Update Games
 
+on:
+  push:
+    paths:
+      - 'roms/**'
+
+jobs:
+  update-json:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Generate JSON
+        run: |
+          echo "[" > 86games.json
+          first=true
+          for file in $(find roms -type f); do
+            name=$(basename "$file")
+            console=$(echo "$file" | cut -d'/' -f2)
+
+            if [ "$first" = true ]; then
+              first=false
+            else
+              echo "," >> 86games.json
+            fi
+
+            echo "  {\"name\": \"$name\", \"console\": \"$console\", \"file\": \"$file\"}" >> 86games.json
+          done
+          echo "]" >> 86games.json
+
+      - name: Commit JSON
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add 86games.json
+          git commit -m "Auto update games list" || echo "No changes"
+          git push
