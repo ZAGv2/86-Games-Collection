@@ -1,6 +1,4 @@
 [
-  {"name": ".keep", "console": ".keep", "file": "roms/.keep"}
-,
   {"name": "Space", "console": "Space", "file": "roms/Space"}
 ,
   {"name": "Mutants", "console": "Mutants", "file": "Mutants"}
