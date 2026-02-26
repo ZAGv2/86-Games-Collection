@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "name": "Pokemon - Fire Red Version [a1] (U) (Squirrels) 2",
+    "file": "roms/Pokemon - Fire Red Version [a1] (U) (Squirrels) 2.zip",
+    "image": "images/Pokemon - Fire Red Version [a1] (U) (Squirrels) 2.jpg"
+  },
+  {
+    "name": "Pokemon - Fire Red Version [a1] (U) (Squirrels)",
+    "file": "roms/Pokemon - Fire Red Version [a1] (U) (Squirrels).zip",
+    "image": "images/Pokemon - Fire Red Version [a1] (U) (Squirrels).jpg"
+  },
+  {
+    "name": "Space Mutants roms 2",
+    "file": "roms/Space Mutants roms 2.rar",
+    "image": "images/Space Mutants roms 2.jpg"
+  }
+]
