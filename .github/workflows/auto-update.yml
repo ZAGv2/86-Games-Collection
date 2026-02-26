@@ -14,9 +14,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install jq
-        run: sudo apt-get install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Process ROMs
+      - name: Process ROMs and Fetch Covers
         env:
           RAWG_API_KEY: ${{ secrets.RAWG_API_KEY }}
         run: |
@@ -28,13 +28,20 @@ jobs:
               filename=$(basename "$file")
               gamename="${filename%.*}"
 
-              echo "Searching cover for $gamename"
+              # Clean game name (remove brackets, special chars)
+              cleanname=$(echo "$gamename" | sed 's/\[.*\]//g' | sed 's/(.*)//g')
+              cleanname=$(echo "$cleanname" | sed 's/[^a-zA-Z0-9 ]//g')
 
-              response=$(curl -s "https://api.rawg.io/api/games?key=$RAWG_API_KEY&search=$gamename")
+              echo "Searching cover for $cleanname"
 
-              image=$(echo $response | jq -r '.results[0].background_image')
+              response=$(curl -s --get \
+                --data-urlencode "search=$cleanname" \
+                --data-urlencode "key=$RAWG_API_KEY" \
+                "https://api.rawg.io/api/games")
 
-              if [ "$image" != "null" ]; then
+              image=$(echo "$response" | jq -r '.results[0].background_image')
+
+              if [ "$image" != "null" ] && [ -n "$image" ]; then
                 curl -L "$image" -o "images/$gamename.jpg"
                 imgpath="images/$gamename.jpg"
               else
@@ -54,5 +61,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add .
-          git commit -m "Auto update games" || echo "No changes"
+          git commit -m "Auto update games and covers" || echo "No changes"
           git push
